@@ -1,773 +1,148 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles.css';
 
-/* ==========================================================================
-   OneBill Mobile-First Release Configuration
-   ========================================================================== */
-const RELEASE = {
-  version: '1.0.0',
-  buildNumber: '8000',
-  packageName: 'com.onebill.app',
-  minAndroid: 'Android 7.0 (API 24+)',
-  targetAndroid: 'Android 15 (API 35)',
-  // Left blank per user instructions: "just leave the download apk bcz still i am doing the app so i will add that apk at last"
-  downloadUrl: '',
-  githubRepo: 'https://github.com/asraf-it-hub/OneBill-DistributionChannel',
-  fileSize: '~22 MB (ARM64)',
-  status: 'v1.0.0 Packaging in Progress',
-  releaseNotes: [
-    'Strict 3-Language System: English, Hindi (हिन्दी), Telugu (తెలుగు).',
-    '100% Offline-First architecture powered by local Drift SQLite on device.',
-    'Instant UPI Payment QR Code generated directly on invoices for scan & pay.',
-    'Customer Ledger (Khata) with real-time due tracking and payment history.',
-    'Income and Expense management with category validation.',
-    '5 Native Android notification channels with Quiet Hours protection.',
-    'App Lock security with 4-6 digit PIN and biometric fingerprint unlock.'
-  ]
-};
-
-/* Real 3-Language App Preview Data */
-const APP_TRANSLATIONS = {
+const apkFile = '/onebill.apk';
+const content = {
   en: {
-    biz: 'Sri Venkateswara Traders',
-    sub: '100% Offline • Drift SQLite',
-    billed: 'Billed',
-    received: 'Received',
-    due: 'Outstanding',
-    rate: 'Collection',
-    alert: '2 Invoices Overdue (₹14,200)',
-    client: 'Rajesh Enterprises',
-    invNum: '#INV-2026-089'
+    nav: ['Features', 'How it works', 'Sample invoice', 'Customer care', 'FAQ'],
+    download: 'Download app',
+    heroEyebrow: 'BILLING THAT KEEPS BUSINESS MOVING', heroTitle: <>Make every bill<br/><em>clear and simple.</em></>,
+    heroText: 'Create invoices, follow customer balances and record daily income and expenses—all from one Android app that works offline.',
+    explore: 'See what’s inside', heroNotes: ['Offline billing', 'Customer balances', 'UPI QR on bills'],
+    strip: ['BUILT AROUND THE DAILY WORK', 'Invoices', 'Customers', 'Income', 'Expenses', 'Inventory'],
+    featureEyebrow: 'ONE APP, THE ESSENTIALS', featureTitle: <>Less time chasing details.<br/><em>More time for your business.</em></>, featureIntro: 'Start with the everyday work. Open each item to see what OneBill helps you manage.', featureLink: 'See how it works',
+    features: [
+      ['Invoices that do the math', 'Create invoices with line items, discounts, interest, due dates and a balance that is easy to understand.', 'Add customer and business details, then preview, print or share the invoice PDF. A UPI QR can be included using the payment details saved for the business.'],
+      ['Customer khata, at a glance', 'See what each customer has been billed, what they have paid and what is still due.', 'Open a customer to review invoices and payment history. Record a payment against an invoice to update the remaining balance.'],
+      ['Income & expenses', 'Keep customer payments, other income and day-to-day expenses together.', 'Income can include customer payments and manual owner entries. Expenses can be added and reviewed from their own section.'],
+      ['Work offline', 'Your business records are stored in a local database on your device, so core billing works without a connection.', 'The app uses Drift and SQLite locally. Cloud sign-in and sync are available when the app is configured for Supabase.'],
+      ['Use your language', 'Choose English, हिन्दी or తెలుగు in the app.', 'OneBill includes localized interface strings and font support for all three languages.'],
+      ['Useful business tools', 'Manage inventory, suppliers, reports and activity alongside billing.', 'The app also includes invoice reminders, a recycle bin, app lock and optional biometric unlock.'],
+    ],
+    flowEyebrow: 'A SIMPLE DAILY FLOW', flowTitle: <>From customer<br/>to <em>paid invoice.</em></>, flowText: 'Keep the whole process close at hand: build a bill, share it, then record payment when it arrives.',
+    steps: [['Add a customer', 'Keep contact details and balances together.'], ['Create and share a bill', 'Preview or share a PDF invoice with clear totals.'], ['Record the payment', 'See the remaining balance in the customer ledger.']],
+    phoneSearch: 'Search customers', phoneCustomers: 'customers', phoneCaption: 'Customer list · sample app screen', tabs: ['Dashboard', 'Customers', 'Income', 'Expenses'],
+    invoiceEyebrow: 'A BILL YOUR CUSTOMER CAN READ', invoiceTitle: <>Every number,<br/><em>in its place.</em></>, invoiceIntro: 'A good invoice answers the important questions quickly: what was supplied, what it cost, and what remains to pay.', invoicePoints: ['Itemized products', 'Discount and interest', 'Balance due', 'UPI payment details'], showDetails: 'Explore invoice details', hideDetails: 'Hide invoice details', invoiceExplain: 'The sample below is based on the invoice layout and fields shown in your app screenshot. Shop, customer, item and payment values are illustrative examples from the supplied sample.',
+    quality: 'Quality groceries', billTo: 'BILL TO', note: 'NOTE:', thankYou: 'Thank you', date: 'Date', dueDate: 'Due', unpaid: 'UNPAID', item: 'Item', qty: 'Qty', unitPrice: 'Unit price', amount: 'Amount', subtotal: 'Subtotal', discount: 'Discount', interest: 'Interest', total: 'Total', balance: 'BALANCE DUE', payUpi: 'PAY VIA UPI', scan: 'Scan with any UPI app to pay', account: 'Account holder',
+    customerEyebrow: 'CUSTOMER LEDGER', customerTitle: <>Know who’s clear<br/>and who’s <em>due.</em></>, customerIntro: 'The customer list makes outstanding balances easy to spot. Open a customer to review their bills and payment history.', customerLink: 'Explore the daily flow', customerList: 'Customers', customerSubtitle: 'Your customer list', clear: 'Clear',
+    careEyebrow: 'HERE TO HELP', careTitle: <>Talk to <em>OneBill.</em></>, careText: 'Questions, feedback or a problem with the app? Send our customer care team a message. We’ll open a ready-to-send email addressed to our support inbox.', careNote: 'Your email app will ask you to send the message. Nothing is sent until you confirm.', name: 'Your name', email: 'Email address', topic: 'What can we help with?', topics: ['App question', 'Billing or invoice issue', 'Customer account issue', 'Feedback or suggestion', 'Other'], message: 'Message', namePlaceholder: 'Name', emailPlaceholder: 'you@example.com', messagePlaceholder: 'Tell us a little about what you need…', continueEmail: 'Continue to email', contactNotice: 'Your email app should open with the message ready. Review it and tap Send to contact OneBill support.',
+    faqEyebrow: 'GOOD TO KNOW', faqTitle: <>Questions, <em>answered.</em></>, faqIntro: 'A few useful details about using OneBill on your Android phone.', faqs: [
+      ['Can I use OneBill without internet?', 'Yes. Billing data is stored locally with SQLite, so core workflows work offline. Cloud sync depends on the app’s Supabase configuration and an internet connection.'],
+      ['Can I share an invoice with a customer?', 'Invoices can be previewed or exported as PDF and shared from the app. The invoice can also show a UPI QR when payment details are set up.'],
+      ['Which languages are available?', 'English, Hindi and Telugu.'],
+      ['How do I install the app?', 'Tap Download app to download the Android installation file. Open it on your Android device and confirm installation when prompted.'],
+    ],
+    ready: 'READY WHEN YOU ARE', readyTitle: <>Bring your billing<br/>into <em>one place.</em></>, readyText: 'OneBill for Android. Download the app and install it on your device.', installNote: 'On Android, open the downloaded file and confirm installation when prompted.', waiting: 'The release app will download here when available.', footer: 'Practical billing and customer account tools for everyday business.', getApp: 'Get the app',
   },
   hi: {
-    biz: 'श्री वेंकटेश्वर ट्रेडर्स',
-    sub: '100% ऑफलाइन • स्थानीय डेटा',
-    billed: 'कुल बिल',
-    received: 'प्राप्त भुगतान',
-    due: 'बकाया राशि',
-    rate: 'वसूली दर',
-    alert: '2 इनवॉइस अतिदेय (₹14,200)',
-    client: 'राजेश एंटरप्राइजेज',
-    invNum: '#INV-2026-089'
+    nav: ['सुविधाएँ', 'कैसे काम करता है', 'बिल का नमूना', 'ग्राहक सहायता', 'सामान्य प्रश्न'], download: 'ऐप डाउनलोड करें',
+    heroEyebrow: 'व्यवसाय को आसान बनाने वाली बिलिंग', heroTitle: <>हर बिल बनाएँ<br/><em>साफ़ और आसान।</em></>, heroText: 'इनवॉइस बनाएँ, ग्राहक की बकाया राशि देखें और रोज़ की आय-व्यय दर्ज करें—एक ऐसे Android ऐप में जो ऑफ़लाइन भी काम करता है।', explore: 'ऐप की सुविधाएँ देखें', heroNotes: ['ऑफ़लाइन बिलिंग', 'ग्राहक बकाया', 'बिल पर UPI QR'],
+    strip: ['रोज़मर्रा के काम के लिए', 'इनवॉइस', 'ग्राहक', 'आय', 'खर्च', 'इन्वेंटरी'], featureEyebrow: 'एक ऐप, ज़रूरी सुविधाएँ', featureTitle: <>विवरणों के पीछे कम समय।<br/><em>व्यवसाय के लिए ज़्यादा समय।</em></>, featureIntro: 'रोज़ के काम से शुरुआत करें। OneBill आपकी किन चीज़ों को संभालने में मदद करता है, जानने के लिए सुविधा चुनें।', featureLink: 'काम करने का तरीका देखें',
+    features: [
+      ['आसान और स्पष्ट इनवॉइस', 'आइटम, छूट, ब्याज और भुगतान तिथि के साथ इनवॉइस बनाएँ।', 'ग्राहक और व्यवसाय का विवरण जोड़ें, फिर इनवॉइस PDF देखें, प्रिंट करें या साझा करें। व्यवसाय के भुगतान विवरण से UPI QR जोड़ा जा सकता है।'],
+      ['एक नज़र में ग्राहक खाता', 'हर ग्राहक का बिल, भुगतान और बाकी बकाया देखें।', 'इनवॉइस और भुगतान इतिहास देखने के लिए ग्राहक खोलें। भुगतान दर्ज करने पर बाकी राशि अपडेट होती है।'],
+      ['आय और खर्च', 'ग्राहक भुगतान, अन्य आय और रोज़ के खर्च एक साथ रखें।', 'आय में ग्राहक भुगतान और मालिक द्वारा दर्ज की गई आय शामिल हो सकती है। खर्च अलग अनुभाग में जोड़े और देखे जा सकते हैं।'],
+      ['ऑफ़लाइन काम करें', 'आपका व्यवसाय डेटा डिवाइस पर रहता है, इसलिए मुख्य बिलिंग सुविधाएँ बिना इंटरनेट चलती हैं।', 'ऐप डिवाइस पर Drift और SQLite का उपयोग करता है। Supabase कॉन्फ़िगर होने पर क्लाउड साइन-इन और सिंक उपलब्ध हैं।'],
+      ['अपनी भाषा में इस्तेमाल करें', 'ऐप में अंग्रेज़ी, हिन्दी या తెలుగు चुनें।', 'OneBill में तीनों भाषाओं के लिए स्थानीयकृत इंटरफ़ेस और फ़ॉन्ट हैं।'],
+      ['काम के अन्य टूल', 'बिलिंग के साथ इन्वेंटरी, सप्लायर, रिपोर्ट और गतिविधि संभालें।', 'ऐप में इनवॉइस रिमाइंडर, रीसायकल बिन, ऐप लॉक और वैकल्पिक बायोमेट्रिक अनलॉक भी हैं।'],
+    ],
+    flowEyebrow: 'रोज़ का आसान तरीका', flowTitle: <>ग्राहक से लेकर<br/><em>भुगतान तक।</em></>, flowText: 'पूरा काम एक ही जगह रखें: बिल बनाएँ, साझा करें और भुगतान मिलने पर दर्ज करें।', steps: [['ग्राहक जोड़ें', 'संपर्क जानकारी और बकाया साथ रखें।'], ['बिल बनाएँ और साझा करें', 'स्पष्ट कुल राशि वाला PDF देखें या साझा करें।'], ['भुगतान दर्ज करें', 'ग्राहक खाते में बची राशि देखें।']], phoneSearch: 'ग्राहक खोजें', phoneCustomers: 'ग्राहक', phoneCaption: 'ग्राहक सूची · ऐप का नमूना', tabs: ['डैशबोर्ड', 'ग्राहक', 'आय', 'खर्च'],
+    invoiceEyebrow: 'ग्राहक के लिए स्पष्ट बिल', invoiceTitle: <>हर राशि,<br/><em>साफ़-साफ़।</em></>, invoiceIntro: 'अच्छा इनवॉइस तुरंत बताता है कि क्या दिया गया, उसकी कीमत क्या है और कितना भुगतान बाकी है।', invoicePoints: ['आइटम का विवरण', 'छूट और ब्याज', 'बाकी राशि', 'UPI भुगतान विवरण'], showDetails: 'इनवॉइस विवरण देखें', hideDetails: 'विवरण छिपाएँ', invoiceExplain: 'यह नमूना आपके ऐप स्क्रीनशॉट के इनवॉइस लेआउट पर आधारित है। दुकान, ग्राहक, आइटम और भुगतान की जानकारी दिए गए उदाहरण से ली गई है।', quality: 'अच्छी किराना सामग्री', billTo: 'ग्राहक', note: 'नोट:', thankYou: 'धन्यवाद', date: 'तारीख', dueDate: 'देय तिथि', unpaid: 'बकाया', item: 'आइटम', qty: 'मात्रा', unitPrice: 'प्रति इकाई मूल्य', amount: 'राशि', subtotal: 'उप-योग', discount: 'छूट', interest: 'ब्याज', total: 'कुल', balance: 'बाकी राशि', payUpi: 'UPI से भुगतान करें', scan: 'किसी भी UPI ऐप से स्कैन करें', account: 'खाताधारक',
+    customerEyebrow: 'ग्राहक खाता', customerTitle: <>जानें किसका खाता<br/><em>साफ़ है, किसका बाकी।</em></>, customerIntro: 'ग्राहक सूची में बकाया राशि आसानी से देखें। बिल और भुगतान इतिहास देखने के लिए ग्राहक खोलें।', customerLink: 'रोज़ का तरीका देखें', customerList: 'ग्राहक', customerSubtitle: 'आपकी ग्राहक सूची', clear: 'बाकी नहीं',
+    careEyebrow: 'हम मदद के लिए हैं', careTitle: <><em>OneBill से</em> बात करें।</>, careText: 'ऐप के बारे में सवाल, सुझाव या कोई समस्या है? हमारी ग्राहक सहायता टीम को संदेश भेजें। आपके ईमेल ऐप में सहायता पते के साथ तैयार ईमेल खुलेगा।', careNote: 'ईमेल भेजने के लिए आपके ईमेल ऐप में पुष्टि करनी होगी। आपकी पुष्टि के बिना कुछ नहीं भेजा जाएगा।', name: 'आपका नाम', email: 'ईमेल पता', topic: 'हम किसमें मदद करें?', topics: ['ऐप से जुड़ा सवाल', 'बिलिंग या इनवॉइस समस्या', 'ग्राहक खाते की समस्या', 'सुझाव या प्रतिक्रिया', 'अन्य'], message: 'संदेश', namePlaceholder: 'नाम', emailPlaceholder: 'you@example.com', messagePlaceholder: 'बताएँ कि आपको किस चीज़ में मदद चाहिए…', continueEmail: 'ईमेल पर आगे बढ़ें', contactNotice: 'आपका ईमेल ऐप तैयार संदेश के साथ खुलेगा। OneBill सहायता से संपर्क करने के लिए संदेश देखें और भेजें पर टैप करें।',
+    faqEyebrow: 'जानने योग्य बातें', faqTitle: <><em>सवालों के जवाब।</em></>, faqIntro: 'Android पर OneBill इस्तेमाल करने की कुछ उपयोगी जानकारी।', faqs: [
+      ['क्या OneBill बिना इंटरनेट चलता है?', 'हाँ। बिलिंग डेटा SQLite के साथ डिवाइस पर रहता है, इसलिए मुख्य सुविधाएँ ऑफ़लाइन काम करती हैं। क्लाउड सिंक के लिए Supabase कॉन्फ़िगरेशन और इंटरनेट कनेक्शन ज़रूरी है।'],
+      ['क्या मैं ग्राहक को इनवॉइस भेज सकता हूँ?', 'ऐप से इनवॉइस का PDF प्रीव्यू, एक्सपोर्ट और साझा किया जा सकता है। भुगतान विवरण सेट होने पर इनवॉइस में UPI QR भी दिख सकता है।'],
+      ['कौन सी भाषाएँ उपलब्ध हैं?', 'अंग्रेज़ी, हिन्दी और तेलुगु।'],
+      ['ऐप कैसे इंस्टॉल करूँ?', 'Android ऐप डाउनलोड करें पर टैप करें। डाउनलोड की गई फ़ाइल खोलें और Android के निर्देश पर इंस्टॉलेशन की पुष्टि करें।'],
+    ],
+    ready: 'जब आप तैयार हों', readyTitle: <>अपनी बिलिंग को<br/><em>एक जगह रखें।</em></>, readyText: 'Android के लिए OneBill ऐप डाउनलोड करें और अपने डिवाइस पर इंस्टॉल करें।', installNote: 'Android पर डाउनलोड की गई फ़ाइल खोलें और इंस्टॉलेशन की पुष्टि करें।', waiting: 'रिलीज़ ऐप उपलब्ध होने पर यहाँ से डाउनलोड करें।', footer: 'रोज़मर्रा के व्यवसाय के लिए आसान बिलिंग और ग्राहक खाता टूल।', getApp: 'ऐप डाउनलोड करें',
   },
   te: {
-    biz: 'శ్రీ వేంకటేశ్వర ట్రేడర్స్',
-    sub: '100% ఆఫ్‌లైన్ • స్థానిక డేటా',
-    billed: 'మొత్తం బిల్లు',
-    received: 'అందుకున్నది',
-    due: 'బకాయి మొత్తం',
-    rate: 'వసూలు శాతం',
-    alert: '2 ఇన్‌వాయిస్‌లు గడువు ముగిసినవి',
-    client: 'రాజేష్ ఎంటర్‌ప్రైజెస్',
-    invNum: '#INV-2026-089'
-  }
+    nav: ['ఫీచర్లు', 'ఎలా పని చేస్తుంది', 'బిల్ నమూనా', 'కస్టమర్ సహాయం', 'ప్రశ్నలు'], download: 'యాప్ డౌన్‌లోడ్',
+    heroEyebrow: 'వ్యాపారాన్ని సులభం చేసే బిల్లింగ్', heroTitle: <>ప్రతి బిల్లును<br/><em>స్పష్టంగా, సులభంగా.</em></>, heroText: 'ఇన్‌వాయిస్‌లు సృష్టించండి, కస్టమర్ బకాయిలను చూడండి, రోజువారీ ఆదాయం మరియు ఖర్చులను నమోదు చేయండి—ఆఫ్‌లైన్‌లో కూడా పనిచేసే ఒక Android యాప్‌లో.', explore: 'యాప్‌లో ఏముందో చూడండి', heroNotes: ['ఆఫ్‌లైన్ బిల్లింగ్', 'కస్టమర్ బకాయిలు', 'బిల్లులపై UPI QR'],
+    strip: ['రోజువారీ పనుల కోసం', 'ఇన్‌వాయిస్‌లు', 'కస్టమర్లు', 'ఆదాయం', 'ఖర్చులు', 'ఇన్వెంటరీ'], featureEyebrow: 'ఒక యాప్, అవసరమైనవి', featureTitle: <>వివరాల కోసం తక్కువ సమయం.<br/><em>వ్యాపారం కోసం ఎక్కువ సమయం.</em></>, featureIntro: 'రోజువారీ పనితో ప్రారంభించండి. OneBill నిర్వహించడంలో సహాయపడే అంశాలను చూడటానికి ఎంచుకోండి.', featureLink: 'ఎలా పని చేస్తుందో చూడండి',
+    features: [
+      ['సులభమైన ఇన్‌వాయిస్‌లు', 'వస్తువులు, డిస్కౌంట్, వడ్డీ, గడువు తేదీతో ఇన్‌వాయిస్‌లను సృష్టించండి.', 'కస్టమర్ మరియు వ్యాపార వివరాలను జోడించి, PDF ఇన్‌వాయిస్‌ను ప్రివ్యూ, ప్రింట్ లేదా షేర్ చేయండి. వ్యాపార చెల్లింపు వివరాలతో UPI QR జోడించవచ్చు.'],
+      ['కస్టమర్ ఖాతా ఒక చూపులో', 'ప్రతి కస్టమర్‌కు బిల్ చేసిన మొత్తం, చెల్లించినది, ఇంకా బాకీ ఉన్నది చూడండి.', 'ఇన్‌వాయిస్‌లు, చెల్లింపు చరిత్ర కోసం కస్టమర్‌ను తెరవండి. చెల్లింపును నమోదు చేస్తే మిగిలిన బాకీ అప్‌డేట్ అవుతుంది.'],
+      ['ఆదాయం & ఖర్చులు', 'కస్టమర్ చెల్లింపులు, ఇతర ఆదాయం, రోజువారీ ఖర్చులను ఒకచోట ఉంచండి.', 'ఆదాయంలో కస్టమర్ చెల్లింపులు మరియు యజమాని నమోదు చేసిన ఆదాయం ఉండవచ్చు. ఖర్చులను ప్రత్యేక విభాగంలో జోడించి చూడవచ్చు.'],
+      ['ఆఫ్‌లైన్‌లో పని చేయండి', 'వ్యాపార రికార్డులు మీ పరికరంలోనే ఉంటాయి, కాబట్టి ముఖ్యమైన బిల్లింగ్ ఇంటర్నెట్ లేకుండానే పనిచేస్తుంది.', 'యాప్ పరికరంలో Drift మరియు SQLite ఉపయోగిస్తుంది. Supabase సెటప్ ఉన్నప్పుడు క్లౌడ్ సైన్-ఇన్, సింక్ అందుబాటులో ఉంటాయి.'],
+      ['మీ భాషలో వాడండి', 'యాప్‌లో English, हिन्दी లేదా తెలుగు ఎంచుకోండి.', 'OneBill ఈ మూడు భాషలకు స్థానికీకరించిన ఇంటర్‌ఫేస్, ఫాంట్‌లను కలిగి ఉంది.'],
+      ['ఉపయోగకరమైన వ్యాపార సాధనాలు', 'బిల్లింగ్‌తో పాటు ఇన్వెంటరీ, సరఫరాదారులు, రిపోర్టులు, కార్యకలాపాలను నిర్వహించండి.', 'యాప్‌లో ఇన్‌వాయిస్ రిమైండర్‌లు, రీసైకిల్ బిన్, యాప్ లాక్, ఐచ్ఛిక బయోమెట్రిక్ అన్‌లాక్ కూడా ఉన్నాయి.'],
+    ],
+    flowEyebrow: 'సులభమైన రోజువారీ విధానం', flowTitle: <>కస్టమర్ నుంచి<br/><em>చెల్లింపు వరకు.</em></>, flowText: 'పూర్తి ప్రక్రియను దగ్గరగా ఉంచండి: బిల్ తయారు చేసి, షేర్ చేసి, చెల్లింపు వచ్చినప్పుడు నమోదు చేయండి.', steps: [['కస్టమర్‌ను జోడించండి', 'సంప్రదింపు వివరాలు, బకాయిలను కలిపి ఉంచండి.'], ['బిల్ తయారు చేసి షేర్ చేయండి', 'స్పష్టమైన మొత్తాలతో PDF ఇన్‌వాయిస్‌ను ప్రివ్యూ లేదా షేర్ చేయండి.'], ['చెల్లింపును నమోదు చేయండి', 'కస్టమర్ ఖాతాలో మిగిలిన మొత్తాన్ని చూడండి.']], phoneSearch: 'కస్టమర్లను వెతకండి', phoneCustomers: 'కస్టమర్లు', phoneCaption: 'కస్టమర్ జాబితా · యాప్ నమూనా', tabs: ['డాష్‌బోర్డ్', 'కస్టమర్లు', 'ఆదాయం', 'ఖర్చులు'],
+    invoiceEyebrow: 'కస్టమర్‌కు అర్థమయ్యే బిల్', invoiceTitle: <>ప్రతి మొత్తం,<br/><em>స్పష్టంగా.</em></>, invoiceIntro: 'మంచి ఇన్‌వాయిస్‌లో ఏమి ఇచ్చారు, దాని ధర ఎంత, ఇంకా ఎంత చెల్లించాలో వెంటనే తెలుస్తుంది.', invoicePoints: ['వస్తువుల వివరాలు', 'డిస్కౌంట్ & వడ్డీ', 'బాకీ మొత్తం', 'UPI చెల్లింపు వివరాలు'], showDetails: 'ఇన్‌వాయిస్ వివరాలు చూడండి', hideDetails: 'వివరాలు దాచండి', invoiceExplain: 'ఈ నమూనా మీ యాప్ స్క్రీన్‌షాట్‌లోని ఇన్‌వాయిస్ రూపకల్పన ఆధారంగా ఉంది. దుకాణం, కస్టమర్, వస్తువులు, చెల్లింపు వివరాలు అందించిన నమూనా నుంచి తీసుకున్నవి.', quality: 'నాణ్యమైన కిరాణా సరుకులు', billTo: 'వీరికి బిల్', note: 'గమనిక:', thankYou: 'ధన్యవాదాలు', date: 'తేదీ', dueDate: 'గడువు తేదీ', unpaid: 'చెల్లించలేదు', item: 'వస్తువు', qty: 'పరిమాణం', unitPrice: 'యూనిట్ ధర', amount: 'మొత్తం', subtotal: 'ఉపమొత్తం', discount: 'డిస్కౌంట్', interest: 'వడ్డీ', total: 'మొత్తం', balance: 'చెల్లించాల్సిన బాకీ', payUpi: 'UPI ద్వారా చెల్లించండి', scan: 'ఏదైనా UPI యాప్‌తో స్కాన్ చేయండి', account: 'ఖాతాదారు',
+    customerEyebrow: 'కస్టమర్ ఖాతా', customerTitle: <>ఎవరి ఖాతా క్లియర్,<br/><em>ఎవరిది బాకీ తెలుసుకోండి.</em></>, customerIntro: 'కస్టమర్ జాబితాలో బకాయిలను సులభంగా గుర్తించండి. బిల్లులు, చెల్లింపు చరిత్రను చూడటానికి కస్టమర్‌ను తెరవండి.', customerLink: 'రోజువారీ విధానం చూడండి', customerList: 'కస్టమర్లు', customerSubtitle: 'మీ కస్టమర్ జాబితా', clear: 'బాకీ లేదు',
+    careEyebrow: 'సహాయం కోసం మేమున్నాం', careTitle: <><em>OneBill‌తో</em> మాట్లాడండి.</>, careText: 'యాప్ గురించి ప్రశ్నలు, సూచనలు లేదా సమస్య ఉందా? మా కస్టమర్ సహాయ బృందానికి సందేశం పంపండి. మా ఇమెయిల్ చిరునామాకు సిద్ధంగా ఉన్న మెయిల్ మీ ఇమెయిల్ యాప్‌లో తెరుచుకుంటుంది.', careNote: 'మెయిల్ పంపడానికి మీ ఇమెయిల్ యాప్‌లో నిర్ధారించాలి. మీ అనుమతి లేకుండా ఏదీ పంపబడదు.', name: 'మీ పేరు', email: 'ఇమెయిల్ చిరునామా', topic: 'మేము ఎలా సహాయం చేయగలం?', topics: ['యాప్ గురించి ప్రశ్న', 'బిల్లింగ్ లేదా ఇన్‌వాయిస్ సమస్య', 'కస్టమర్ ఖాతా సమస్య', 'సూచన లేదా అభిప్రాయం', 'ఇతర'], message: 'సందేశం', namePlaceholder: 'పేరు', emailPlaceholder: 'you@example.com', messagePlaceholder: 'మీకు ఏ సహాయం కావాలో వివరించండి…', continueEmail: 'ఇమెయిల్‌కు కొనసాగండి', contactNotice: 'మీ ఇమెయిల్ యాప్ సిద్ధంగా ఉన్న సందేశంతో తెరుచుకుంటుంది. OneBill సహాయానికి పంపడానికి సందేశాన్ని చూసి Send నొక్కండి.',
+    faqEyebrow: 'తెలుసుకోవాల్సినవి', faqTitle: <><em>ప్రశ్నలకు సమాధానాలు.</em></>, faqIntro: 'Androidలో OneBill వాడకానికి కొన్ని ఉపయోగకరమైన వివరాలు.', faqs: [
+      ['OneBill ఇంటర్నెట్ లేకుండా పనిచేస్తుందా?', 'అవును. బిల్లింగ్ డేటా SQLiteతో పరికరంలోనే ఉంటుంది, కాబట్టి ముఖ్యమైన పనులు ఆఫ్‌లైన్‌లో పనిచేస్తాయి. క్లౌడ్ సింక్‌కు Supabase సెటప్, ఇంటర్నెట్ అవసరం.'],
+      ['కస్టమర్‌కు ఇన్‌వాయిస్ షేర్ చేయవచ్చా?', 'యాప్ నుంచి ఇన్‌వాయిస్‌ను ప్రివ్యూ, PDFగా ఎగుమతి చేసి షేర్ చేయవచ్చు. చెల్లింపు వివరాలు సెటప్ చేసినప్పుడు UPI QR కూడా చూపవచ్చు.'],
+      ['ఏ భాషలు అందుబాటులో ఉన్నాయి?', 'English, Hindi మరియు Telugu.'],
+      ['యాప్‌ను ఎలా ఇన్‌స్టాల్ చేయాలి?', 'యాప్ డౌన్‌లోడ్ నొక్కండి. డౌన్‌లోడ్ చేసిన ఫైల్‌ను Androidలో తెరిచి, సూచించినప్పుడు ఇన్‌స్టాలేషన్‌ను నిర్ధారించండి.'],
+    ],
+    ready: 'మీరు సిద్ధమైనప్పుడు', readyTitle: <>మీ బిల్లింగ్‌ను<br/><em>ఒకచోట ఉంచండి.</em></>, readyText: 'Android కోసం OneBill యాప్‌ను డౌన్‌లోడ్ చేసి మీ పరికరంలో ఇన్‌స్టాల్ చేయండి.', installNote: 'Androidలో డౌన్‌లోడ్ చేసిన ఫైల్‌ను తెరిచి ఇన్‌స్టాలేషన్‌ను నిర్ధారించండి.', waiting: 'రిలీజ్ యాప్ అందుబాటులోకి వచ్చినప్పుడు ఇక్కడ డౌన్‌లోడ్ చేయండి.', footer: 'రోజువారీ వ్యాపారం కోసం సులభమైన బిల్లింగ్ మరియు కస్టమర్ ఖాతా సాధనాలు.', getApp: 'యాప్ పొందండి',
+  },
 };
-
-/* Concise SVG Icons */
-function Icon({ name }) {
-  const icons = {
-    download: <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />,
-    offline: <path d="M1 1l22 22m-5.3-5.3A10.9 10.9 0 0 0 23 12a11 11 0 0 0-3.2-7.8M8.5 8.5A6 6 0 0 0 6 12c0 2.2 1.2 4.1 3 5.2m5.2.2a5.9 5.9 0 0 0 1.8-4.4c0-.7-.1-1.3-.4-1.9M12 2a11 11 0 0 0-6.8 2.4" />,
-    qr: <path d="M3 3h6v6H3zm12 0h6v6h-6zm-12 12h6v6H3zm12 0h3v3h-3zm3 3h3v3h-3zm-3 3h3v3h-3zm3-6h3v3h-3z" />,
-    translate: <path d="m5 8 6 6m-6 0 6-6M2 5h12M7 2v3m7 6 4 9 4-9m-7 6h6" />,
-    lock: <path d="M5 11h14v10H5zm3 0V7a4 4 0 0 1 8 0v4" />,
-    receipt: <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1zm4 6h8m-8 4h8m-8 4h5" />,
-    bell: <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9zm-4.27 13a2 2 0 0 1-3.46 0" />,
-    cloud: <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />,
-    menu: <path d="M4 6h16M4 12h16M4 18h16" />,
-    close: <path d="M18 6L6 18M6 6l12 12" />,
-    check: <path d="M20 6L9 17l-5-5" />,
-    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />
-  };
-
-  return (
-    <svg 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      style={{ width: '1em', height: '1em' }}
-    >
-      {icons[name] || icons.arrow}
-    </svg>
-  );
-}
-
-/* ==========================================================================
-   Header & Mobile Navigation (Clean, No Arrows, Smooth Drawer)
-   ========================================================================== */
-function Header({ currentPath, onNavigate }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const navLinks = [
-    { label: 'Home', path: '/' },
-    { label: 'Features', path: '/features' },
-    { label: 'Download', path: '/download' },
-    { label: 'Help & FAQ', path: '/help' },
-    { label: 'About', path: '/about' }
-  ];
-
-  const handleLinkClick = (e, path) => {
-    e.preventDefault();
-    setMenuOpen(false);
-    onNavigate(path);
-  };
-
-  return (
-    <header className="site-header">
-      <div className="wrap nav-bar">
-        {/* Brand */}
-        <a 
-          href="/" 
-          className="brand" 
-          onClick={(e) => handleLinkClick(e, '/')}
-          aria-label="OneBill Home"
-        >
-          <img src="/assets/onebill-logo.png" alt="OneBill" className="brand-logo" />
-          <span className="brand-title">OneBill</span>
-          <span className="brand-tag">Android</span>
-        </a>
-
-        {/* Desktop Nav */}
-        <nav className="desktop-nav">
-          {navLinks.map((item) => (
-            <a
-              key={item.path}
-              href={item.path}
-              className={`nav-link ${currentPath === item.path ? 'active' : ''}`}
-              onClick={(e) => handleLinkClick(e, item.path)}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Right Action & Mobile Menu Toggle */}
-        <div className="header-right">
-          <a 
-            href="/download" 
-            className="header-download-btn"
-            onClick={(e) => handleLinkClick(e, '/download')}
-          >
-            <Icon name="download" />
-            <span>Get App</span>
-          </a>
-
-          <button 
-            className="menu-toggle" 
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle navigation menu"
-          >
-            <Icon name={menuOpen ? 'close' : 'menu'} />
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Drawer (No arrows, clean layout) */}
-      {menuOpen && (
-        <>
-          <div className="mobile-menu-backdrop" onClick={() => setMenuOpen(false)}></div>
-          <div className="mobile-menu-drawer">
-            {navLinks.map((item) => (
-              <a
-                key={item.path}
-                href={item.path}
-                className={`mobile-menu-link ${currentPath === item.path ? 'active' : ''}`}
-                onClick={(e) => handleLinkClick(e, item.path)}
-              >
-                {item.label}
-              </a>
-            ))}
-            <div className="mobile-menu-cta">
-              <a 
-                href="/download" 
-                className="btn btn-primary btn-block"
-                onClick={(e) => handleLinkClick(e, '/download')}
-              >
-                <Icon name="download" />
-                <span>Download Android APK</span>
-              </a>
-            </div>
-          </div>
-        </>
-      )}
-    </header>
-  );
-}
-
-/* ==========================================================================
-   Home Hero & Interactive Mobile App Card
-   ========================================================================== */
-function HomeView({ onNavigate }) {
-  const [lang, setLang] = useState('en');
-  const t = APP_TRANSLATIONS[lang];
-
-  return (
-    <>
-      <section className="hero">
-        <div className="wrap">
-          <div className="hero-pill">
-            <span className="hero-pill-dot"></span>
-            <span>Offline-First Android App</span>
-          </div>
-
-          <h1>
-            Simple Billing & Khata.
-            <br />
-            <span>Built for Modern Business.</span>
-          </h1>
-
-          <p className="hero-desc">
-            Fast invoices with instant UPI QR codes, customer dues ledger, and 100% offline reliability. 
-            Native in English, हिन्दी & తెలుగు.
-          </p>
-
-          <div className="hero-actions">
-            <a 
-              href="/download" 
-              className="btn btn-primary btn-block"
-              onClick={(e) => { e.preventDefault(); onNavigate('/download'); }}
-            >
-              <Icon name="download" />
-              <span>Download APK</span>
-            </a>
-            <a 
-              href="/features" 
-              className="btn btn-secondary btn-block"
-              onClick={(e) => { e.preventDefault(); onNavigate('/features'); }}
-            >
-              <span>Explore Features</span>
-            </a>
-          </div>
-
-          <div className="hero-badges-row">
-            <span className="hero-badge-tag">
-              <Icon name="offline" /> 100% Offline
-            </span>
-            <span className="hero-badge-tag">
-              <Icon name="qr" /> UPI QR Bills
-            </span>
-            <span className="hero-badge-tag">
-              <Icon name="lock" /> PIN & Biometrics
-            </span>
-          </div>
-
-          {/* App Card Preview (Compact Mobile Screen with 3 Languages) */}
-          <div className="app-card-preview">
-            <div className="preview-top-bar">
-              <div className="preview-top-biz">
-                <div className="preview-avatar">OB</div>
-                <div className="preview-biz-name">
-                  <h4>{t.biz}</h4>
-                  <span>{t.sub}</span>
-                </div>
-              </div>
-
-              {/* 3-Language Switcher */}
-              <div className="preview-lang-switch">
-                <button 
-                  className={`lang-btn ${lang === 'en' ? 'active' : ''}`}
-                  onClick={() => setLang('en')}
-                >
-                  EN
-                </button>
-                <button 
-                  className={`lang-btn ${lang === 'hi' ? 'active' : ''}`}
-                  onClick={() => setLang('hi')}
-                >
-                  हिन्दी
-                </button>
-                <button 
-                  className={`lang-btn ${lang === 'te' ? 'active' : ''}`}
-                  onClick={() => setLang('te')}
-                >
-                  తెలుగు
-                </button>
-              </div>
-            </div>
-
-            <div className="preview-body">
-              {/* Stat Chips */}
-              <div className="stat-chips-grid">
-                <div className="stat-chip billed">
-                  <span>{t.billed}</span>
-                  <strong>₹1,48,500</strong>
-                </div>
-                <div className="stat-chip received">
-                  <span>{t.received}</span>
-                  <strong>₹1,12,000</strong>
-                </div>
-                <div className="stat-chip due">
-                  <span>{t.due}</span>
-                  <strong>₹36,500</strong>
-                </div>
-                <div className="stat-chip rate">
-                  <span>{t.rate}</span>
-                  <strong>75.4%</strong>
-                </div>
-              </div>
-
-              {/* Alert Strip */}
-              <div className="preview-alert-strip">
-                <span>⚠️ {t.alert}</span>
-                <span style={{ textDecoration: 'underline' }}>Review</span>
-              </div>
-
-              {/* Sample Invoice */}
-              <div className="preview-inv-row">
-                <div className="inv-row-meta">
-                  <b>{t.client}</b>
-                  <small>{t.invNum} • Due Today</small>
-                </div>
-                <div className="inv-row-total">
-                  <b>₹14,500</b>
-                  <br />
-                  <span className="badge-paid">PAID</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Core Highlights (Mobile Optimized) */}
-      <section className="wrap" style={{ paddingBottom: '30px' }}>
-        <div className="section-title-wrap">
-          <span className="section-label">Core Capabilities</span>
-          <h2 className="section-title">Everything Needed for Daily Billing</h2>
-          <p className="section-subtitle">No complicated accounting jargon. Built specifically for retail, wholesale, and services.</p>
-        </div>
-
-        <FeaturesList />
-
-        {/* 3 Regional Languages Card */}
-        <div className="lang-card-compact">
-          <span className="section-label">Native Languages</span>
-          <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0E1715' }}>Manage Business in Your Mother Tongue</h3>
-          <p style={{ fontSize: '13px', color: '#5E726C', marginTop: '4px' }}>
-            OneBill comes completely localized across every screen, dialog, and report.
-          </p>
-
-          <div className="lang-chips">
-            <div className="lang-chip-box">
-              <b>English</b>
-              <small>Default</small>
-            </div>
-            <div className="lang-chip-box">
-              <b>हिन्दी (Hindi)</b>
-              <small>राष्ट्रव्यापी</small>
-            </div>
-            <div className="lang-chip-box">
-              <b>తెలుగు (Telugu)</b>
-              <small>ప్రాంతీయ</small>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Download CTA */}
-        <div style={{ textAlign: 'center', margin: '20px 0 40px' }}>
-          <a 
-            href="/download" 
-            className="btn btn-primary btn-block"
-            onClick={(e) => { e.preventDefault(); onNavigate('/download'); }}
-          >
-            <Icon name="download" />
-            <span>Get OneBill for Android</span>
-          </a>
-        </div>
-      </section>
-    </>
-  );
-}
-
-/* ==========================================================================
-   Features List Component (Concise, Visual)
-   ========================================================================== */
-function FeaturesList() {
-  const features = [
-    {
-      icon: 'offline',
-      title: '100% Offline-First SQLite',
-      desc: 'Creates bills, records payments, and checks customer dues without internet. Never freezes during connectivity drops.'
-    },
-    {
-      icon: 'qr',
-      title: 'Instant UPI QR on Bills',
-      desc: 'Prints your dynamic UPI payment QR code on PDF bills. Customers scan and pay directly via GPay, PhonePe, or Paytm.'
-    },
-    {
-      icon: 'receipt',
-      title: 'Customer Ledger (Khata)',
-      desc: 'Tracks invoice totals, recorded payments, and outstanding dues with 1-tap WhatsApp PDF bill sharing.'
-    },
-    {
-      icon: 'translate',
-      title: 'English, हिन्दी & తెలుగు',
-      desc: 'Strict 3-language system built for regional Indian trade. Switch anytime with a single tap.'
-    },
-    {
-      icon: 'lock',
-      title: 'App Lock & Biometrics',
-      desc: 'Keep sales numbers and customer balances private with secure 4-6 digit PIN and fingerprint authentication.'
-    },
-    {
-      icon: 'bell',
-      title: 'Due Date Reminders',
-      desc: 'Automatic notifications before invoices are due and follow-ups for overdue payments with Quiet Hours support.'
-    },
-    {
-      icon: 'cloud',
-      title: 'Automatic Cloud Backup',
-      desc: 'Syncs safely with Supabase when connected so your business data is never lost if your phone changes.'
-    }
-  ];
-
-  return (
-    <div className="features-list">
-      {features.map((item) => (
-        <div key={item.title} className="feature-item-card">
-          <div className="feature-item-icon">
-            <Icon name={item.icon} />
-          </div>
-          <div className="feature-item-content">
-            <h3>{item.title}</h3>
-            <p>{item.desc}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ==========================================================================
-   Download View (/download)
-   ========================================================================== */
-function DownloadView() {
-  const hasLiveLink = Boolean(RELEASE.downloadUrl);
-
-  return (
-    <div className="wrap" style={{ padding: '24px 20px 40px' }}>
-      <div className="section-title-wrap">
-        <span className="section-label">Android Release</span>
-        <h1 className="section-title">Download OneBill</h1>
-        <p className="section-subtitle">Official Android APK distribution for mobile devices.</p>
-      </div>
-
-      <div className="download-card-mobile">
-        <div className="download-status-badge">
-          <span>⚡ {RELEASE.status}</span>
-        </div>
-
-        <h2>OneBill for Android</h2>
-        <p>
-          Direct installation package. Lightweight, offline-ready, and built for fast daily billing.
-        </p>
-
-        <div className="download-meta-table">
-          <div className="meta-cell">
-            <small>Package</small>
-            <b>{RELEASE.packageName}</b>
-          </div>
-          <div className="meta-cell">
-            <small>Version</small>
-            <b>v{RELEASE.version} (Build {RELEASE.buildNumber})</b>
-          </div>
-          <div className="meta-cell">
-            <small>Android</small>
-            <b>{RELEASE.minAndroid}</b>
-          </div>
-          <div className="meta-cell">
-            <small>APK Size</small>
-            <b>{RELEASE.fileSize}</b>
-          </div>
-        </div>
-
-        {hasLiveLink ? (
-          <a href={RELEASE.downloadUrl} className="btn btn-primary btn-block" download>
-            <Icon name="download" />
-            <span>Download APK ({RELEASE.fileSize})</span>
-          </a>
-        ) : (
-          <div>
-            <div 
-              className="btn btn-secondary btn-block" 
-              style={{ opacity: 0.85, cursor: 'default', background: 'rgba(255,255,255,0.1)', color: '#FFFFFF', borderColor: 'transparent' }}
-            >
-              <span>APK Packaging in Progress</span>
-            </div>
-            <p style={{ fontSize: '12px', color: '#88AFA6', marginTop: '12px', textAlign: 'center' }}>
-              The APK build is being packaged and will be linked here shortly.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* 3-Step Quick Install Guide */}
-      <div className="install-guide-card">
-        <h3>How to Install the APK</h3>
-        <div className="guide-steps-list">
-          <div className="guide-step">
-            <div className="guide-step-num">1</div>
-            <div className="guide-step-text">
-              <b>Download the APK</b>
-              <p>Tap download above to save the file to your Android phone.</p>
-            </div>
-          </div>
-          <div className="guide-step">
-            <div className="guide-step-num">2</div>
-            <div className="guide-step-text">
-              <b>Allow Installation</b>
-              <p>When prompted by Android, enable "Allow from this source" for your browser.</p>
-            </div>
-          </div>
-          <div className="guide-step">
-            <div className="guide-step-num">3</div>
-            <div className="guide-step-text">
-              <b>Open & Start Billing</b>
-              <p>Tap "Install" then "Open". Select your language and manage your bills!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ==========================================================================
-   Help & FAQ View (/help)
-   ========================================================================== */
-function HelpView() {
-  const [openIndex, setOpenIndex] = useState(0);
-
-  const faqs = [
-    {
-      q: 'Does OneBill work without internet?',
-      a: 'Yes. OneBill is built 100% offline-first with an on-device SQLite database. You can create bills, add customers, and record payments completely offline. Data syncs to the cloud when you connect.'
-    },
-    {
-      q: 'How do customers pay using the UPI QR Code?',
-      a: 'Add your UPI ID in Business settings. When you create an invoice, OneBill automatically embeds a scannable UPI QR code on the bill. Customers scan with Google Pay, PhonePe, or Paytm to pay directly.'
-    },
-    {
-      q: 'Which languages are supported?',
-      a: 'OneBill natively supports English, Hindi (हिन्दी), and Telugu (తెలుగు). You can switch your preferred language anytime in the app settings with one tap.'
-    },
-    {
-      q: 'Can I lock the app with a PIN or fingerprint?',
-      a: 'Yes. Enable App Lock inside OneBill to protect your billing numbers with a 4–6 digit PIN and optional biometric fingerprint/face authentication.'
-    },
-    {
-      q: 'How does customer due tracking (Khata) work?',
-      a: 'Each customer profile tracks total billed amount, total received, and balance due. Recording a payment automatically decreases the outstanding balance in real time.'
-    },
-    {
-      q: 'What if I accidentally delete an invoice?',
-      a: 'OneBill includes a built-in Recycle Bin. Soft-deleted invoices, customers, and expenses can be restored instantly with one tap.'
-    }
-  ];
-
-  return (
-    <div className="wrap" style={{ padding: '24px 20px 40px' }}>
-      <div className="section-title-wrap">
-        <span className="section-label">Help Center</span>
-        <h1 className="section-title">Frequently Asked Questions</h1>
-        <p className="section-subtitle">Quick answers about OneBill offline billing and UPI payments.</p>
-      </div>
-
-      <div className="faq-stack">
-        {faqs.map((faq, idx) => {
-          const isOpen = openIndex === idx;
-          return (
-            <div key={faq.q} className={`faq-card ${isOpen ? 'open' : ''}`}>
-              <button 
-                className="faq-btn" 
-                onClick={() => setOpenIndex(isOpen ? -1 : idx)}
-              >
-                <span>{faq.q}</span>
-                <span>{isOpen ? '−' : '+'}</span>
-              </button>
-              {isOpen && <div className="faq-text">{faq.a}</div>}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ==========================================================================
-   About & Privacy Views
-   ========================================================================== */
-function AboutView() {
-  return (
-    <div className="wrap" style={{ padding: '24px 20px 40px' }}>
-      <div className="section-title-wrap">
-        <span className="section-label">About OneBill</span>
-        <h1 className="section-title">Built for Real Trade</h1>
-        <p className="section-subtitle">Simple, reliable billing without monthly complexity.</p>
-      </div>
-
-      <div className="content-sheet">
-        <h2>Our Focus</h2>
-        <p>
-          OneBill is an independent, offline-first Android application designed to help merchants, 
-          wholesalers, and small businesses manage invoices, track customer dues, and collect payments via UPI 
-          without cumbersome accounting overhead.
-        </p>
-
-        <h2>Offline Data Ownership</h2>
-        <p>
-          Your records stay on your phone. OneBill does not sell your customer lists or track your margins. 
-          When cloud sync is enabled, records back up securely to your private database account.
-        </p>
-
-        <h2>Language Inclusivity</h2>
-        <p>
-          We believe small business tools should speak regional mother tongues. OneBill is fully native in 
-          English, Hindi, and Telugu.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function PrivacyView() {
-  return (
-    <div className="wrap" style={{ padding: '24px 20px 40px' }}>
-      <div className="section-title-wrap">
-        <span className="section-label">Legal</span>
-        <h1 className="section-title">Privacy Policy</h1>
-        <p className="section-subtitle">Clear and transparent information about your data.</p>
-      </div>
-
-      <div className="content-sheet">
-        <h2>1. Local Storage First</h2>
-        <p>
-          OneBill stores customer information, line items, and financial records in a local SQLite database 
-          directly on your Android device. The app operates fully without sending your data to any servers.
-        </p>
-
-        <h2>2. Optional Cloud Synchronization</h2>
-        <p>
-          When you sign in and enable cloud backup, data synchronizes with Supabase using encrypted TLS connections. 
-          We never share or sell your business records to advertisers.
-        </p>
-
-        <h2>3. App Security</h2>
-        <p>
-          App Lock credentials and tokens are secured via Android Keystore and biometric security APIs on your phone.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ==========================================================================
-   Footer
-   ========================================================================== */
-function Footer({ onNavigate }) {
-  const handleNav = (e, path) => {
-    e.preventDefault();
-    onNavigate(path);
-  };
-
-  return (
-    <footer className="site-footer">
-      <div className="wrap footer-inner">
-        <div className="footer-brand">
-          <img src="/assets/onebill-logo.png" alt="OneBill" style={{ width: 28, height: 28, borderRadius: 6 }} />
-          <b style={{ fontSize: '17px', color: '#FFFFFF' }}>OneBill</b>
-          <span style={{ fontSize: '11px', color: '#5EEAD4', marginLeft: '4px' }}>Android</span>
-        </div>
-
-        <p className="footer-desc">
-          Simple offline billing and customer khata for modern businesses. Native in English, हिन्दी & తెలుగు.
-        </p>
-
-        <div className="footer-nav-row">
-          <a href="/" onClick={(e) => handleNav(e, '/')}>Home</a>
-          <a href="/features" onClick={(e) => handleNav(e, '/features')}>Features</a>
-          <a href="/download" onClick={(e) => handleNav(e, '/download')}>Download</a>
-          <a href="/help" onClick={(e) => handleNav(e, '/help')}>Help & FAQ</a>
-          <a href="/about" onClick={(e) => handleNav(e, '/about')}>About</a>
-          <a href="/privacy" onClick={(e) => handleNav(e, '/privacy')}>Privacy</a>
-        </div>
-
-        <div className="footer-bottom-copy">
-          © 2026 OneBill (com.onebill.app). All rights reserved.
-        </div>
-      </div>
-    </footer>
-  );
-}
-
-/* ==========================================================================
-   Main Application with Smooth SPA Navigation
-   ========================================================================== */
+const customers = [
+  ['A', 'Aadesh Jain', '7972000826', '₹8,021'], ['A', 'Abdur Rahman', '8179799588', ''],
+  ['A', 'Ananya Pandey', '8653256899', '₹2,580'], ['K', 'Khaja Hussain', '9080705060', ''],
+  ['R', 'Ramesh kumar', '9876543210', '₹1,500'], ['S', 'Suraj', '9638692558', ''],
+];
+function DownloadLink({ label, className = 'button button-primary' }) { return <a className={className} href={apkFile} download="OneBill.apk"><span>↓</span> {label}</a>; }
 function App() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname.replace(/\/$/, '') || '/');
-
-  const navigate = (path) => {
-    window.history.pushState(null, '', path);
-    setCurrentPath(path.replace(/\/$/, '') || '/');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
+  const [lang, setLang] = useState(() => { const saved = localStorage.getItem('onebill-site-language'); return ['en','hi','te'].includes(saved) ? saved : 'en'; });
+  const [menu, setMenu] = useState(false);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const languageMenuRef = useRef(null);
+  const [activeFeature, setActiveFeature] = useState(0);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [faq, setFaq] = useState(-1);
+  const [contactNotice, setContactNotice] = useState('');
+  const t = content[lang] || content.en;
+  useEffect(() => { document.documentElement.lang = lang; document.title = lang==='hi' ? 'OneBill — आसान बिलिंग' : lang==='te' ? 'OneBill — సులభమైన బిల్లింగ్' : 'OneBill — Clear billing for everyday business'; }, [lang]);
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname.replace(/\/$/, '') || '/');
-      window.scrollTo(0, 0);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    function closeLanguageMenu(event) { if (languageMenuRef.current && !languageMenuRef.current.contains(event.target)) setLanguageMenuOpen(false); }
+    function closeOnEscape(event) { if (event.key === 'Escape') setLanguageMenuOpen(false); }
+    document.addEventListener('mousedown', closeLanguageMenu);
+    document.addEventListener('touchstart', closeLanguageMenu);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => { document.removeEventListener('mousedown', closeLanguageMenu); document.removeEventListener('touchstart', closeLanguageMenu); document.removeEventListener('keydown', closeOnEscape); };
   }, []);
-
-  useEffect(() => {
-    const titles = {
-      '/': 'OneBill — Offline Billing & Khata App for Android',
-      '/features': 'Features — OneBill Android Billing',
-      '/download': 'Download APK — OneBill Android App',
-      '/help': 'Help & FAQ — OneBill',
-      '/about': 'About OneBill',
-      '/privacy': 'Privacy Policy — OneBill'
-    };
-    document.title = titles[currentPath] || 'OneBill — Android Billing App';
-  }, [currentPath]);
-
-  let CurrentView = <HomeView onNavigate={navigate} />;
-  if (currentPath === '/features') {
-    CurrentView = (
-      <div className="wrap" style={{ padding: '24px 20px 40px' }}>
-        <div className="section-title-wrap">
-          <span className="section-label">All Features</span>
-          <h1 className="section-title">Built for Your Workflow</h1>
-          <p className="section-subtitle">Everything you need for everyday billing and customer khata.</p>
-        </div>
-        <FeaturesList />
-      </div>
-    );
-  } else if (currentPath === '/download') {
-    CurrentView = <DownloadView />;
-  } else if (currentPath === '/help') {
-    CurrentView = <HelpView />;
-  } else if (currentPath === '/about') {
-    CurrentView = <AboutView />;
-  } else if (currentPath === '/privacy') {
-    CurrentView = <PrivacyView />;
+  const navIds = ['#features', '#how', '#invoice', '#contact', '#faq'];
+  function changeLanguage(value) { setLang(value); localStorage.setItem('onebill-site-language', value); setLanguageMenuOpen(false); }
+  function submitContact(event) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const subject = `[OneBill customer care] ${form.get('topic')}: ${form.get('name')}`;
+    const body = `Name: ${form.get('name')}\nEmail: ${form.get('email')}\nTopic: ${form.get('topic')}\n\nMessage:\n${form.get('message')}`;
+    window.location.href = `mailto:onebill.support@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setContactNotice(t.contactNotice);
+    event.currentTarget.reset();
   }
-
-  return (
-    <>
-      <Header currentPath={currentPath} onNavigate={navigate} />
-      <main id="app-main">
-        {CurrentView}
-      </main>
-      <Footer onNavigate={navigate} />
-    </>
-  );
+  return <>
+    <header className="header"><div className="nav wrap">
+      <a className="brand" href="#top" aria-label="OneBill"><img src="/assets/onebill-logo.png" alt=""/><span>OneBill</span></a>
+      <nav className={menu?'nav-links show':'nav-links'}>{t.nav.map((label,i)=><a key={navIds[i]} href={navIds[i]} onClick={()=>setMenu(false)}>{label}</a>)}</nav>
+      <div className="nav-actions"><div className="language-control" ref={languageMenuRef}><button className="language-trigger" type="button" aria-label="Choose website language" aria-haspopup="listbox" aria-expanded={languageMenuOpen} onClick={()=>setLanguageMenuOpen(!languageMenuOpen)}><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg><span>{lang==='en'?'English':lang==='hi'?'हिन्दी':'తెలుగు'}</span><svg className="language-caret" aria-hidden="true" viewBox="0 0 12 12"><path d="m2 4 4 4 4-4"/></svg></button>{languageMenuOpen&&<div className="language-popover" role="listbox" aria-label="Website language"><div className="language-popover-title">{lang==='en'?'Website language':lang==='hi'?'वेबसाइट की भाषा':'వెబ్‌సైట్ భాష'}</div>{[['en','English','EN'],['hi','हिन्दी','HI'],['te','తెలుగు','TE']].map(([code,label,short])=><button type="button" role="option" aria-selected={lang===code} className={lang===code?'language-option selected':'language-option'} key={code} onClick={()=>changeLanguage(code)}><span className="language-option-name"><b>{label}</b><small>{short}</small></span><span className="language-check">{lang===code?'✓':''}</span></button>)}</div>}</div><DownloadLink label={t.download} className="button button-dark"/><button className="menu-button" onClick={()=>setMenu(!menu)} aria-label={lang==='en'?'Toggle navigation':lang==='hi'?'मेन्यू खोलें':'మెనూ తెరవండి'}>{menu?'×':'☰'}</button></div>
+    </div></header>
+    <main id="top">
+      <section className="hero"><div className="wrap hero-grid"><div className="hero-copy"><div className="eyebrow"><i/> {t.heroEyebrow}</div><h1>{t.heroTitle}</h1><p>{t.heroText}</p><div className="hero-buttons"><DownloadLink label={t.download}/><a className="button button-outline" href="#features">{t.explore} <span>↘</span></a></div><div className="hero-notes">{t.heroNotes.map((x,i)=><span key={x}>{['◉','⌁','₹'][i]} {x}</span>)}</div></div><div className="hero-visual"><img className="hero-screenshot" src="/assets/business-overview.png" alt={lang==='en'?'OneBill business overview app screen':lang==='hi'?'OneBill व्यवसाय ओवरव्यू ऐप स्क्रीन':'OneBill వ్యాపార అవలోకనం యాప్ స్క్రీన్'} /></div></div></section>
+      <section className="trust-strip"><div className="wrap trust-inner">{t.strip.map((x,i)=>i===0?<span key={x}>{x}</span>:<b key={x}>{x}</b>)}</div></section>
+      <section className="section wrap" id="features"><div className="section-heading"><div><div className="eyebrow">{t.featureEyebrow}</div><h2>{t.featureTitle}</h2></div><p>{t.featureIntro}</p></div><div className="feature-layout"><div className="feature-tabs">{t.features.map((f,i)=><button key={i} className={activeFeature===i?'feature-tab selected':'feature-tab'} onClick={()=>setActiveFeature(i)}><span>{['▤','◎','↗','⌁','Aa','⌑'][i]}</span><b>{f[0]}</b><i>↗</i></button>)}</div><article className="feature-detail"><div className="detail-icon">{['▤','◎','↗','⌁','Aa','⌑'][activeFeature]}</div><div className="eyebrow">{String(activeFeature+1).padStart(2,'0')} / 06</div><h3>{t.features[activeFeature][0]}</h3><p>{t.features[activeFeature][1]}</p><div className="detail-more">{t.features[activeFeature][2]}</div><a href="#how">{t.featureLink} <span>→</span></a></article></div></section>
+      <section className="workflow" id="how"><div className="wrap workflow-grid"><div><div className="eyebrow">{t.flowEyebrow}</div><h2>{t.flowTitle}</h2><p>{t.flowText}</p><ol className="steps">{t.steps.map(([title,desc],i)=><li key={title}><b>0{i+1}</b><span><strong>{title}</strong><small>{desc}</small></span></li>)}</ol></div><div className="phone-wrap"><div className="phone"><div className="phone-top"><span>HARVEST</span><span>⌁　▣　♧</span></div><div className="search">⌕　 {t.phoneSearch}</div><small className="count">6 {t.phoneCustomers}</small><div className="customer-list">{customers.slice(0,4).map(([initial,name,phone,balance])=><div className="customer" key={name}><span className="initial">{initial}</span><span className="customer-name"><b>{name}</b><small>{phone}</small></span><span className={balance?'due':'clear'}>{balance||t.clear}</span></div>)}</div><div className="phone-tabs">{t.tabs.map((label,i)=><span className={i===1?'on':''} key={label}>{['▦','♙','₹','▣'][i]}<small>{label}</small></span>)}</div></div><div className="phone-caption">{t.phoneCaption}</div></div></div></section>
+      <section className="invoice-section" id="invoice"><div className="wrap invoice-grid"><div className="invoice-copy"><div className="eyebrow">{t.invoiceEyebrow}</div><h2>{t.invoiceTitle}</h2><p>{t.invoiceIntro}</p><div className="invoice-points">{t.invoicePoints.map(x=><span key={x}>✓ {x}</span>)}</div><button className="text-button" onClick={()=>setInvoiceOpen(!invoiceOpen)}>{invoiceOpen?t.hideDetails:t.showDetails} <span>{invoiceOpen?'−':'+'}</span></button>{invoiceOpen&&<div className="invoice-explainer">{t.invoiceExplain}</div>}</div><article className="invoice-paper"><div className="invoice-top"><div><div className="shop-mark">H</div><h3>HARVEST grocer</h3><small>{t.quality}</small><p>987654321 · example123@gmail.com<br/>shop 4, #Main, Hyderabad<br/><b>GSTIN: 36AAAAA0000A1Z0</b></p></div><div className="invoice-id"><span>{lang==='en'?'INVOICE':lang==='hi'?'इनवॉइस':'ఇన్‌వాయిస్'}</span><b>OB-000001</b><small>{t.date}: 09/10/2026</small><small>{t.dueDate}: 10/10/2026</small><i>{t.unpaid}</i></div></div><div className="note-line"><b>{t.note}</b> {t.thankYou}</div><div className="billto"><small>{t.billTo}</small><b>Aadesh (Room Mate)</b><span>Phone: 7972000826</span></div><div className="items"><div className="item-row item-head"><span>{t.item}</span><span>{t.qty}</span><span>{t.unitPrice}</span><span>{t.amount}</span></div><div className="item-row"><span>Oxy Pesticides</span><span>1</span><span>₹580.00</span><span>₹580.00</span></div><div className="item-row"><span>Nitro Fertilizers</span><span>1</span><span>₹850.00</span><span>₹850.00</span></div><div className="item-row"><span>Seeds</span><span>1</span><span>₹550.00</span><span>₹550.00</span></div><div className="item-row"><span>Multigrain chemicals</span><span>12</span><span>₹547.00</span><span>₹6,564.00</span></div></div><div className="invoice-totals"><div><span>{t.subtotal}</span><b>₹8,544.00</b></div><div><span>{t.discount}</span><b>− ₹20.00</b></div><div><span>{t.interest}</span><b>₹6.00</b></div><div className="total"><span>{t.total}</span><b>₹8,530.00</b></div><div className="balance"><span>{t.balance}</span><b>₹8,530.00</b></div></div><div className="upi-box"><div className="qr">▦</div><div><b>{t.payUpi}</b><span>{t.scan}</span><strong>UPI ID: 987654321@upi</strong><small>{t.account}: Asraf</small></div></div></article></div></section>
+      <section className="customer-section" id="customers"><div className="wrap customer-grid"><div><div className="eyebrow">{t.customerEyebrow}</div><h2>{t.customerTitle}</h2><p>{t.customerIntro}</p><a className="text-button" href="#how">{t.customerLink} <span>→</span></a></div><div className="ledger-card"><div className="ledger-head"><div><b>{t.customerList}</b><small>{t.customerSubtitle}</small></div><span>⌕</span></div>{customers.map(([initial,name,phone,balance])=><div className="ledger-row" key={name}><span className="initial">{initial}</span><span className="customer-name"><b>{name}</b><small>{phone}</small></span><span className={balance?'due':'clear'}>{balance||t.clear}</span></div>)}</div></div></section>
+      <section className="contact-section" id="contact"><div className="wrap contact-grid"><div><div className="eyebrow">{t.careEyebrow}</div><h2>{t.careTitle}</h2><p>{t.careText}</p><a className="support-email" href="mailto:onebill.support@gmail.com">onebill.support@gmail.com ↗</a><div className="contact-note">{t.careNote}</div></div><form className="contact-form" onSubmit={submitContact}><label>{t.name}<input name="name" autoComplete="name" required maxLength="100" placeholder={t.namePlaceholder}/></label><label>{t.email}<input name="email" type="email" autoComplete="email" required maxLength="200" placeholder={t.emailPlaceholder}/></label><label>{t.topic}<select name="topic" required>{t.topics.map(x=><option key={x}>{x}</option>)}</select></label><label>{t.message}<textarea name="message" required minLength="10" maxLength="4000" rows="5" placeholder={t.messagePlaceholder}/></label><button className="button button-primary" type="submit">{t.continueEmail} <span>→</span></button>{contactNotice&&<p className="contact-notice" role="status">{contactNotice}</p>}</form></div></section>
+      <section className="faq-section wrap" id="faq"><div className="section-heading"><div><div className="eyebrow">{t.faqEyebrow}</div><h2>{t.faqTitle}</h2></div><p>{t.faqIntro}</p></div><div className="faq-list">{t.faqs.map(([q,a],i)=><div className="faq-row" key={q}><button onClick={()=>setFaq(faq===i?-1:i)}><b>{q}</b><span>{faq===i?'−':'+'}</span></button>{faq===i&&<p>{a}</p>}</div>)}</div></section>
+      <section className="download-section" id="download"><div className="wrap download-inner"><div><div className="eyebrow">{t.ready}</div><h2>{t.readyTitle}</h2><p>{t.readyText}</p></div><div className="download-action"><DownloadLink label={t.download}/><small>{t.installNote}</small><span>{t.waiting}</span></div></div></section>
+    </main>
+    <footer className="footer"><div className="wrap footer-inner"><a className="brand" href="#top"><img src="/assets/onebill-logo.png" alt=""/><span>OneBill</span></a><p>{t.footer}</p><a href="#download">{t.getApp} ↗</a><small>© {new Date().getFullYear()} OneBill</small></div></footer>
+  </>;
 }
 
-createRoot(document.getElementById('root')).render(<App />);
+createRoot(document.getElementById('root')).render(<App/>);
+
+
+
+
