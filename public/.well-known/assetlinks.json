@@ -1,0 +1,12 @@
+﻿[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.onebill.app",
+      "sha256_cert_fingerprints": [
+        "61:02:F3:91:7E:FD:65:17:A5:42:DA:E9:6C:42:EC:C9:00:78:BD:BC:A4:AE:24:F9:52:43:B8:DC:D5:FE:3D:89"
+      ]
+    }
+  }
+]
