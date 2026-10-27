@@ -1,0 +1,9 @@
+# Local configuration (the publishable key is safe for browser use, but keep
+# environment files out of source control and never place service-role keys here).
+.env
+.env.*
+!.env.example
+
+# Generated dependencies and build output
+node_modules/
+dist/
