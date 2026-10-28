@@ -5,8 +5,13 @@ import './styles.css';
 
 const apkFile = '/onebill.apk';
 const supportEmail = 'onebill.support@gmail.com';
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// These are Supabase's browser-safe publishable settings. They are not
+// service-role credentials and are safe to include in a public Pages bundle.
+// Keep the environment-variable override for previews and other deployments,
+// while the fallback prevents a production build from silently disabling the
+// public deletion form when Pages variables were not configured.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://xohoflgjopudlhkdzwos.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_99Osm7an2ciABUjI5WxiOQ_qk5CfMAZ';
 const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
